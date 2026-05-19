@@ -1,0 +1,37 @@
+Cargando modelo de toxicidad...
+Modelo listo
+
+Procesando chatgpt...
+  3000 filas en espanol recolectadas de chatgpt
+
+Procesando gemini...
+  1322 filas en espanol recolectadas de gemini
+
+Procesando perplexity...
+  525 filas en espanol recolectadas de perplexity
+
+Procesando claude...
+  114 filas en espanol recolectadas de claude
+
+Procesando grok...
+  564 filas en espanol recolectadas de grok
+
+Total filas en espanol: 5525
+Iniciando clasificacion de 5525 textos...
+  Checkpoint guardado en fila 512
+  Checkpoint guardado en fila 1024
+  Checkpoint guardado en fila 1536
+  Checkpoint guardado en fila 2048
+  Checkpoint guardado en fila 2560
+  Checkpoint guardado en fila 3008
+  Checkpoint guardado en fila 3520
+  Checkpoint guardado en fila 4032
+  Checkpoint guardado en fila 4544
+  Checkpoint guardado en fila 5056
+  Checkpoint guardado en fila 5504
+  Checkpoint guardado en fila 5525
+
+Completado
+Total procesado:  5525
+Toxicos en ES:    268
+Archivo guardado: sharechat_es_toxicidad.parquet

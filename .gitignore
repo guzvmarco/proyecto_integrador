@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environments
+venv/
+env/
+/.venv/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+
+# Secrets and tokens
+token.env
+*.env
+
+# Data files
+*.parquet

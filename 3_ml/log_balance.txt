@@ -1,0 +1,45 @@
+Cargando modelo de toxicidad...
+Modelo listo
+
+Procesando chatgpt | idioma: English | objetivo: 3000 filas
+  Filas recolectadas: 3000
+  Clasificando 3000 textos...
+  Checkpoint guardado: 512 filas
+  Checkpoint guardado: 1024 filas
+  Checkpoint guardado: 1536 filas
+  Checkpoint guardado: 2048 filas
+  Checkpoint guardado: 2560 filas
+  Checkpoint guardado: 3000 filas
+  Toxicos encontrados: 119 / 3000
+
+Procesando gemini | idioma: Spanish | objetivo: 3000 filas
+  Filas recolectadas: 1322
+  Clasificando 1322 textos...
+  Checkpoint guardado: 512 filas
+  Checkpoint guardado: 1024 filas
+  Toxicos encontrados: 46 / 1322
+
+Procesando grok | idioma: Spanish | objetivo: 3000 filas
+  Filas recolectadas: 564
+  Clasificando 564 textos...
+  Checkpoint guardado: 512 filas
+  Toxicos encontrados: 40 / 564
+
+Procesando perplexity | idioma: Spanish | objetivo: 3000 filas
+  Filas recolectadas: 525
+  Clasificando 525 textos...
+  Checkpoint guardado: 512 filas
+  Checkpoint guardado: 525 filas
+  Toxicos encontrados: 19 / 525
+
+Completado!
+Total procesado:  5411
+Toxicos totales:  224
+
+Toxicos por plataforma e idioma:
+platform    lang
+chatgpt     en      119
+gemini      es       46
+grok        es       40
+perplexity  es       19
+dtype: int64
