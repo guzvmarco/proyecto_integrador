@@ -6,7 +6,7 @@ from datasets import load_dataset
 from huggingface_hub import login
 
 def cargar_datos():
-    ruta_archivo = "data/sharechat_sample_balanced.parquet"
+    ruta_archivo = "machine_learning/data/sharechat_sample_balanced.parquet"
     
     # 1. Gestión de descarga y balanceo (Tu lógica original)
     if not os.path.exists(ruta_archivo):

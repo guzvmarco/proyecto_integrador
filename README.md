@@ -38,13 +38,11 @@ Para responder a esto, este proyecto implementó un pipeline end-to-end:
 
 ## 🗂️ Estructura del Repositorio
 
-La organización del proyecto sigue una estructura limpia, modular y orientada a los lineamientos de evaluación académica del proyecto integrador:
+La organización del proyecto sigue una estructura altamente limpia, rigurosa y consolidada, centrada en los dos pilares principales del entregable:
 
 ```directory
 proyecto_integrador/
-├── 1_bases_de_datos/               # [BD] Scripts de almacenamiento y consultas SQL/NoSQL (si aplica)
-├── 2_prob_estadistica/             # [PE] Pruebas de hipótesis, intervalos de confianza y EDA matemático
-├── 3_ml/                           # [ML] Core de Machine Learning del proyecto
+├── machine_learning/               # [ML] Core de Machine Learning y Modelado
 │   ├── 1_eda/                      # Notebooks de Análisis Exploratorio de Datos (Toxicity & Prompts)
 │   │   ├── exploracion.ipynb
 │   │   ├── exploracionI.ipynb
@@ -56,28 +54,22 @@ proyecto_integrador/
 │   │   ├── etiquetar_v2.py         # Etiquetador inteligente automatizado con Mistral AI
 │   │   ├── master.ipynb            # Sandbox y desarrollo del pipeline de datos
 │   │   └── yasonunchingoayuda.ipynb# Notebook de resolución de limitación de tasa y reetiquetado
+│   ├── 3_deep_learning_poo/        # [POO] Implementación del clasificador bajo el paradigma de OOP
+│   │   └── clasificador_nn.py      # Modelo estructurado en clases usando Keras/TensorFlow
 │   ├── archive/                    # Almacén de datasets locales en formato optimizado Parquet
 │   ├── data/                       # Carpeta local para los outputs intermedios y finales
 │   ├── NaiveBayes_Proyecto_integrador.ipynb # Entregable Principal: Modelado y evaluación de Naive Bayes vs KNN
 │   └── matriz_confusion_naive_bayes.png    # Gráfica de rendimiento del modelo final
-├── 4_matematica_aplicada/          # [MA] Demostraciones analíticas de modelos probabilísticos
-├── 5_complejidad/                  # [CO] Análisis de complejidad computacional y Big-O
+├── complejidad_algoritmica/        # [CO] Análisis de complejidad computacional y Big-O
 │   ├── Notebook.ipynb              # Notebook con escalamiento empírico y regresiones de tiempo de ejecución
-│   ├── PI_lineamientos.pdf         # Rúbrica oficial del área de complejidad
-│   └── *.png                       # Gráficas de escalamiento de KNN, LogReg y PCA de componentes
-├── 6_programacion_oo/              # [POO] Implementación del código bajo paradigma orientado a objetos
-│   └── main.py                     # Script estructurado en OOP para entrenamiento y balanceo en Keras/TF
-├── data/                           # Almacenamiento general de bases de datos compartidas
-├── reporte/                        # Reportes parciales y bitácoras de avance
-├── scripts/                        # Scripts utilitarios (ej. move_ml_archives.py para reordenar)
+│   ├── PI_lineamientos.pdf         # Rúbrica oficial del área de complejidad y pautas
+│   └── *.png                       # Gráficas de escalamiento de KNN, Regresión Logística y PCA de componentes
 ├── .env.template                   # Plantilla segura para configurar credenciales API
 ├── .gitignore                      # Configuración de archivos omitidos en Git (Parquets, .env, etc.)
 ├── Poster_FINAL.pdf                # Póster científico resumido de la investigación
 ├── README.md                       # Documento de presentación principal (este archivo)
 └── Reporte_Estudio_Proyecto_Integrador.pdf # Reporte final consolidado escrito del proyecto
 ```
-
-*(Nota: Las carpetas académicas vacías contienen un archivo invisible `.gitkeep` para asegurar que la jerarquía del proyecto se mantenga rastreada en GitHub).*
 
 ---
 
@@ -129,19 +121,19 @@ HF_TOKEN=tu_token_de_hugging_face_aqui
 Si deseas reproducir todo el flujo desde cero, el orden de ejecución es el siguiente:
 
 1. **Clasificación y Extracción de Toxicidad**:
-   Ejecuta `3_ml/2_preparacion_datos/clasificador_balance.py` para realizar la descarga estratificada desde ShareChat, aplicar Detoxify Multilingual a las cadenas de texto y generar los datasets base equilibrados por plataforma e idioma.
+   Ejecuta `machine_learning/2_preparacion_datos/clasificador_balance.py` para realizar la descarga estratificada desde ShareChat, aplicar Detoxify Multilingual a las cadenas de texto y generar los datasets base equilibrados por plataforma e idioma.
    
 2. **Auditoría de Alineación mediante LLM**:
-   Ejecuta `3_ml/2_preparacion_datos/etiquetar_v2.py` para conectar con el servicio de Mistral AI y clasificar de manera determinista cada respuesta como `RECHAZO`, `CUMPLIMIENTO` o `CUMPLIMIENTO_CON_DISCLAIMER`.
+   Ejecuta `machine_learning/2_preparacion_datos/etiquetar_v2.py` para conectar con el servicio de Mistral AI y clasificar de manera determinista cada respuesta como `RECHAZO`, `CUMPLIMIENTO` o `CUMPLIMIENTO_CON_DISCLAIMER`.
 
 3. **Entrenamiento y Evaluación de Clasificadores**:
-   Abre y ejecuta `3_ml/NaiveBayes_Proyecto_integrador.ipynb` en Jupyter. Aquí se entrena un clasificador **Gaussian Naive Bayes** comparándolo contra **K-Nearest Neighbors** para predecir si un prompt será cumplido o rechazado basado en variables contextuales del chat.
+   Abre y ejecuta `machine_learning/NaiveBayes_Proyecto_integrador.ipynb` en Jupyter. Aquí se entrena un clasificador **Gaussian Naive Bayes** comparándolo contra **K-Nearest Neighbors** para predecir si un prompt será cumplido o rechazado basado en variables contextuales del chat.
 
 4. **Auditoría de Complejidad**:
-   Ejecuta `5_complejidad/Notebook.ipynb` para visualizar el comportamiento empírico del tiempo de entrenamiento del modelo KNN y la Regresión Logística a medida que el tamaño de las muestras incrementa ($N$), validando las curvas frente al comportamiento asintótico teórico.
+   Ejecuta `complejidad_algoritmica/Notebook.ipynb` para visualizar el comportamiento empírico del tiempo de entrenamiento del modelo KNN y la Regresión Logística a medida que el tamaño de las muestras incrementa ($N$), validando las curvas frente al comportamiento asintótico teórico.
 
-5. **Prueba OOP**:
-   Corre `6_programacion_oo/main.py` para validar una arquitectura de entrenamiento estructurada mediante clases en Python utilizando Keras/TensorFlow para tareas de clasificación.
+5. **Prueba POO (Deep Learning)**:
+   Corre `machine_learning/3_deep_learning_poo/clasificador_nn.py` para validar una arquitectura de entrenamiento estructurada mediante el paradigma orientado a objetos (clases) utilizando Keras/TensorFlow para tareas de clasificación.
 
 ---
 
@@ -164,13 +156,11 @@ El clasificador **Gaussian Naive Bayes** demostró una alta efectividad para seg
 
 ## 🎓 Contexto Académico
 
-Este proyecto es el entregable integrador de múltiples disciplinas académicas que interactúan de forma sinérgica:
-* **Bases de Datos (`1_bases_de_datos`)**: Almacenamiento eficiente e indexación de embeddings/textos.
-* **Probabilidad y Estadística (`2_prob_estadistica`)**: Auditoría formal del sesgo a través de pruebas de hipótesis e inferencia.
-* **Machine Learning (`3_ml`)**: Entrenamiento, balanceo y predicción del comportamiento de los sistemas inteligentes.
-* **Matemática Aplicada (`4_matematica_aplicada`)**: Fundamentos analíticos detrás de los algoritmos bayesianos y probabilísticos.
-* **Complejidad Algorítmica (`5_complejidad`)**: Análisis riguroso del Big-O y optimización del escalado del software.
-* **Programación Orientada a Objetos (`6_programacion_oo`)**: Estructuración del código de IA en clases reutilizables y mantenibles.
+Este proyecto consolida de manera interdisciplinaria los pilares fundamentales de la computación científica:
+* **Machine Learning (`machine_learning`)**: Entrenamiento, balanceo, predicción bayesiana, KNN e inferencia estadística aplicados a la seguridad de la IA.
+* **Complejidad Algorítmica (`complejidad_algoritmica`)**: Análisis de complejidad asintótica Big-O y modelado matemático del tiempo de ejecución empírico.
+* **Programación Orientada a Objetos (`machine_learning/3_deep_learning_poo`)**: Estructuración del clasificador en una clase modular aplicando abstracción y encapsulamiento.
+* **Estadística Inferencial**: Aplicación rigurosa de contrastes de hipótesis ($\chi^2$) para auditar sesgos lingüísticos y de arquitectura en sistemas LLM.
 
 ---
 
