@@ -28,7 +28,7 @@ Complejidad Algorítmica, Cota Asintótica, Big-O, K-Nearest Neighbors, Regresi�
 \end{IEEEkeywords}
 
 \section{Introducción}
-\IEEEPARstart{E}{l} advenimiento de los Modelos de Lenguaje Grande (LLMs) ha revolucionado el procesamiento del lenguaje natural. No obstante, garantizar que estas herramientas respondan bajo parámetros seguros y alineados (\textit{AI Safety}) es una prioridad crítica. El estudio de la hipótesis del \textit{Sesgo de Alineación} evalúa si los modelos comerciales y de código abierto rechazan adecuadamente el contenido hostil en diferentes lenguas y plataformas \cite{ouyang2022}.
+\IEEEPARstart{E}{l} advenimiento de los Modelos de Lenguaje Grande (LLMs) ha revolucionado el procesamiento del lenguaje natural. No obstante, garantizar que estas herramientas respondan bajo parámetros seguros y alineados (\textit{AI Safety}) es una prioridad crítica. El estudio de la hipótesis del \textit{Sesgo de Alineación} evalúa si los modelos comerciales y de código abierto rechazan adecuadamente el contenido hostil en diferentes lenguas y plataformas, empleando clasificadores de aprendizaje supervisado de base matemática formal \cite{hastie2009}.
 
 Para predecir el comportamiento de seguridad basándose en atributos de entrada (longitud de prompts, plataforma e idioma), se hace indispensable el uso de modelos clasificadores como KNN y Regresión Logística. En este contexto, no solo importa la precisión del clasificador, sino también su eficiencia computacional. 
 
@@ -39,7 +39,7 @@ El presente reporte tiene como finalidad formalizar matemáticamente los dos alg
 Para el desarrollo del pipeline del proyecto, se implementaron de forma manual dos arquitecturas clásicas de aprendizaje supervisado, operando sobre representaciones vectoriales dispersas del texto obtenidas mediante vectorización TF-IDF en un espacio de características de dimensión $d$.
 
 \subsection{K-Nearest Neighbors (KNN) con Similitud Coseno}
-El clasificador KNN es un método no paramétrico de aprendizaje perezoso (\textit{lazy learning}). En lugar de modelar una fase de entrenamiento explícita, almacena el conjunto de entrenamiento de muestras $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
+El clasificador KNN es un método no paramétrico de aprendizaje perezoso (\textit{lazy learning}) \cite{hastie2009}. En lugar de modelar una fase de entrenamiento explícita, almacena el conjunto de entrenamiento de muestras $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
 
 Dado un punto de consulta $\mathbf{q} \in \mathbb{R}^d$, el algoritmo calcula la similitud de $\mathbf{q}$ con cada muestra de entrenamiento $\mathbf{x}_i$ ($i = 1, \dots, N$) utilizando la \textit{Similitud Coseno}, definida como:
 \begin{equation}
@@ -94,7 +94,7 @@ En contraste, la librería optimizada \texttt{scikit-learn} utiliza estructuras 
 \end{itemize}
 
 \subsection{Regresión Logística con Descenso de Gradiente}
-La Regresión Logística es un modelo paramétrico donde la probabilidad de que una muestra $\mathbf{x} \in \mathbb{R}^d$ pertenezca a la clase positiva ($y = 1$) se modela mediante la función sigmoide $\sigma(z)$:
+La Regresión Logística es un modelo paramétrico formal \cite{hastie2009} donde la probabilidad de que una muestra $\mathbf{x} \in \mathbb{R}^d$ pertenezca a la clase positiva ($y = 1$) se modela mediante la función sigmoide $\sigma(z)$:
 \begin{equation}
 h_{\mathbf{w}, b}(\mathbf{x}) = \sigma(\mathbf{w}^T \mathbf{x} + b) = \frac{1}{1 + e^{-(\mathbf{w}^T \mathbf{x} + b)}}
 \end{equation}
@@ -232,10 +232,26 @@ T_{\text{predict}}^{\text{manual}}(M, d) = \mathcal{O}(M \cdot d)
 
 \section{Resultados Empíricos y Comparativa con Librerías}
 
-Las pruebas experimentales se llevaron a cabo utilizando la base de datos balanceada y etiquetada del proyecto integrador, la cual fue extraída y curada de ShareChat \cite{tucnguyen2024}, constando de $N_{\text{total}} = 430$ muestras de texto vectorizadas con TF-IDF a $d = 1000$ columnas. Se midieron los tiempos de ejecución de las fases de entrenamiento y predicción mediante la técnica de submuestreo incremental para obtener curvas de escalamiento empíricas.
+Las pruebas experimentales se llevaron a cabo utilizando la base de datos balanceada y etiquetada del proyecto integrador, la cual fue extraída y curada de ShareChat \cite{tucnguyen2024}, constando de $N_{\text{total}} = 430$ muestras de texto vectorizadas con TF-IDF a $d = 1000$ columnas. En la Figura \ref{fig:pca_plot} se ilustra la distribución bidimensional de las características proyectadas mediante Análisis de Componentes Principales (PCA), evidenciando el solapamiento y solidez de los patrones de alineación de prompts.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{pca-plot.png}
+\caption{Visualización bidimensional del conjunto de datos ShareChat balanceado mediante reducción de dimensionalidad PCA ($d=1000 \rightarrow 2$).}
+\label{fig:pca_plot}
+\end{figure}
+
+Se midieron los tiempos de ejecución de las fases de entrenamiento y predicción mediante la técnica de submuestreo incremental para obtener curvas de escalamiento empíricas.
 
 \subsection{Análisis del Comportamiento de KNN}
-Como se visualiza en la gráfica empírica de KNN, el tiempo de predicción manual exhibe un crecimiento estrictamente lineal respecto al tamaño del conjunto de entrenamiento $N$, coincidiendo de forma exacta con la complejidad de cota teórica deducida $\mathcal{O}(M \cdot N \cdot d)$. Al ser $d = 1000$ y $N$ creciente, el costo computacional de realizar productos punto de alta dimensionalidad de forma repetida en Python interpretado se vuelve un cuello de botella severo.
+Como se visualiza en la gráfica empírica de la Figura \ref{fig:complexity_knn}, el tiempo de predicción manual exhibe un crecimiento estrictamente lineal respecto al tamaño del conjunto de entrenamiento $N$, coincidiendo de forma exacta con la complejidad de cota teórica deducida $\mathcal{O}(M \cdot N \cdot d)$. Al ser $d = 1000$ y $N$ creciente, el costo computacional de realizar productos punto de alta dimensionalidad de forma repetida en Python interpretado se vuelve un cuello de botella severo.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{complexity-knn.png}
+\caption{Escalamiento temporal empírico en la predicción de KNN ($K=5, d=1000$): Implementación manual frente a scikit-learn.}
+\label{fig:complexity_knn}
+\end{figure}
 
 Por el contrario, la biblioteca scikit-learn (\texttt{KNeighborsClassifier}) implementa optimizaciones a bajo nivel a través de llamadas altamente eficientes en C y álgebra lineal vectorial estructurada (operaciones BLAS de nivel 3). Asimismo, ofrece la alternativa de construir estructuras de indexación espacial como \textbf{KD-Tree} o \textbf{Ball-Tree}:
 * \textbf{KD-Tree}: Divide el espacio métrico de entrenamiento de forma recursiva en hiperplanos ortogonales. La construcción del árbol toma un costo inicial de $\mathcal{O}(N \cdot d \log N)$ en entrenamiento. Sin embargo, en predicción reduce la búsqueda de vecinos a $\mathcal{O}(d \log N)$ operaciones en promedio.
@@ -244,9 +260,16 @@ Por el contrario, la biblioteca scikit-learn (\texttt{KNeighborsClassifier}) imp
 \subsection{Análisis del Comportamiento de Regresión Logística}
 En el entrenamiento de Regresión Logística, el descenso de gradiente manual (GD) opera con una cota lineal estricta $\mathcal{O}(T \cdot N \cdot d)$. Para obtener una convergencia precisa del costo, el descenso requiere de un número muy elevado de iteraciones ($T \ge 2000$), elevando drásticamente la latencia del entrenamiento conforme $N$ escala.
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{complexity-rl.png}
+\caption{Escalamiento temporal empírico en el entrenamiento de Regresión Logística ($T=2000, d=1000$): GD manual frente a L-BFGS.}
+\label{fig:complexity_rl}
+\end{figure}
+
 La implementación de scikit-learn (\texttt{LogisticRegression}) solventa esta limitación mediante el uso del solver \textbf{L-BFGS (Limited-memory Broyden-Fletcher-Goldfarb-Shanno)}, un método cuasi-Newton de optimización no lineal de segundo orden \cite{nocedal2006}:
 * **Curvatura e Información de Segundo Orden**: A diferencia del gradiente descendente convencional, que solo utiliza información de primer orden (la dirección de máxima pendiente), L-BFGS aproxima de forma iterativa el inverso de la matriz Hessiana (de segundas derivadas) utilizando la información de los gradientes más recientes en una memoria compacta de tamaño de historial $m$ (generalmente $m \approx 10$).
-* **Velocidad de Convergencia**: Al incorporar información de curvatura, L-BFGS converge a la solución óptima en una fracción mínima de iteraciones ($T' \ll T$). Esto reduce dramáticamente el tiempo de ejecución en la práctica, escalando bajo una cota aproximada de $\mathcal{O}(T' \cdot m \cdot d)$. Como se comprueba empíricamente, el solver optimizado converge de forma casi instantánea, manteniendo el tiempo plano e independiente de $N$ para el espectro de muestras evaluado.
+* **Velocidad de Convergencia**: Al incorporar información de curvatura, L-BFGS converge a la solución óptima en una fracción mínima de iteraciones ($T' \ll T$). Esto reduce dramáticamente el tiempo de ejecución en la práctica, escalando bajo una cota aproximada de $\mathcal{O}(T' \cdot m \cdot d)$. Como se comprueba empíricamente en la Figura \ref{fig:complexity_rl}, el solver optimizado converge de forma casi instantánea, manteniendo el tiempo plano e independiente de $N$ para el espectro de muestras evaluado.
 
 \section{Conclusión}
 El estudio riguroso de la complejidad computacional valida la necesidad de algoritmos eficientes en problemas aplicados a la seguridad de la Inteligencia Artificial. Mientras que las implementaciones manuales brindan una comprensión pedagógica y transparente del funcionamiento matemático subyacente de KNN y la Regresión Logística, resultan inviables para el escalamiento de datos del mundo real bajo entornos de producción debido al costo lineal del cálculo manual de distancias de alta dimensionalidad y las miles de iteraciones requeridas por el descenso de gradiente de primer orden. 
@@ -255,8 +278,8 @@ Las optimizaciones de las bibliotecas de código abierto (vectorización de bajo
 
 \begin{thebibliography}{5}
 
-\bibitem{ouyang2022}
-Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Ray, A., Sandholm, P., Carter, S., Zaremba, W., \& Lowe, R. (2022). Training language models to follow instructions with human feedback. \emph{Advances in Neural Information Processing Systems}, \emph{35}, 27730--27744.
+\bibitem{hastie2009}
+Hastie, T., Tibshirani, R., \& Friedman, J. (2009). \emph{The Elements of Statistical Learning: Data Mining, Inference, and Prediction} (2nd ed.). Springer.
 
 \bibitem{tucnguyen2024}
 Nguyen, T. (2024). \emph{ShareChat: A large-scale dataset of multi-turn conversations with LLMs} (Technical Report). Hugging Face. \url{https://huggingface.co/datasets/tucnguyen/ShareChat}
