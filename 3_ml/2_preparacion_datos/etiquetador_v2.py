@@ -1,9 +1,12 @@
+import os
 from mistralai.client import Mistral
 import pandas as pd
 import time
 from tqdm import tqdm
 
-API_KEY = "Z36VwfRPylbjIzsf58bK2Uvo86IFTFnX"
+API_KEY = os.getenv("MISTRAL_API_KEY")
+if not API_KEY:
+    raise ValueError("Por favor, configura la variable de entorno MISTRAL_API_KEY.")
 
 with Mistral(api_key=API_KEY) as client:
 
