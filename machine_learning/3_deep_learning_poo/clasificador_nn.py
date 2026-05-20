@@ -10,7 +10,6 @@ def cargar_datos():
     
     # 1. Gestión de descarga y balanceo (Tu lógica original)
     if not os.path.exists(ruta_archivo):
-        # login(token="TU_TOKEN_AQUI") # Opcional si ya estás loggeado
         os.makedirs("data", exist_ok=True)
         
         plataformas = ["chatgpt", "perplexity", "grok", "gemini", "claude"]
@@ -44,25 +43,20 @@ def cargar_datos():
         df_sample = pd.read_parquet(ruta_archivo)
 
     # 2. Limpieza y preparación para el modelo
-    # Para que el modelo de la tarea funcione (Input shape=4), 
-    # necesitamos convertir categorías a números.
-    
-    # Ejemplo de 4 características: idioma, plataforma, longitud de texto e índice
-    idioma_map = {'English': 0, 'Spanish': 1}
+        idioma_map = {'English': 0, 'Spanish': 1}
     plat_map = {p: i for i, p in enumerate(["chatgpt", "perplexity", "grok", "gemini", "claude"])}
 
-    # Convertimos a arreglos de numpy (lo que pide el profesor)
+    # Convertimos a arreglos de numpy 
     idioma_arr = df_sample['detected_language_final'].map(idioma_map).to_numpy()
     plataforma_arr = df_sample['source_platform'].map(plat_map).to_numpy()
     longitud_text_arr = df_sample['plain_text'].str.len().to_numpy()
     msg_index_arr = df_sample['message_index'].fillna(0).to_numpy()
 
-    # NOTA: En tu proyecto de toxicidad, aquí es donde limpiarías el texto
     return idioma_arr, plataforma_arr, longitud_text_arr, msg_index_arr
 
 
 def contruir_modelo(num_classes):
-    # El modelo espera 4 características de entrada según el código base
+    # El modelo espera 4 características de entrada 
     model = tf.keras.Sequential(
         [
             tf.keras.layers.Input(shape=(4,)),
@@ -83,7 +77,6 @@ def contruir_modelo(num_classes):
 def entrenar_modelo(idioma, plat, long, index, epochs=80, batch_size=16):
     # Creamos la matriz X uniendo los vectores
     X = np.column_stack((idioma, plat, long, index))
-    # Para este ejemplo de la tarea, usamos idioma como "etiqueta" (Y)
     y = idioma 
     
     num_classes = len(np.unique(y))
@@ -99,7 +92,6 @@ def main():
     
     print(f"Datos cargados. Total de muestras: {len(idioma)}")
     
-    # Ejecutamos el entrenamiento
     entrenar_modelo(idioma, plat, long, index)
     
     return "Proceso completado con éxito"
