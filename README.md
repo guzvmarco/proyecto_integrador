@@ -173,4 +173,31 @@ Este proyecto está diseñado bajo los más altos estándares de **cibersegurida
 
 ---
 
+## 📚 Referencias Bibliográficas y Científicas
+
+Este proyecto de investigación y desarrollo se fundamenta en las siguientes referencias y publicaciones científicas:
+
+### 1. Modelos de Lenguaje, Alineación y Seguridad (AI Safety)
+* **Alineación de Modelos de Lenguaje (RLHF)**: Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., ... & Lowe, R. (2022). *Training language models to follow instructions with human feedback*. Advances in Neural Information Processing Systems, 35, 27730-27744. [Artículo Científico](https://proceedings.neurips.cc/paper_files/paper/2022/hash/b1efde53be36d956074ca6724a71d293-Abstract-Conference.html)
+* **Constitutional AI & Auto-Evaluación**: Bai, Y., Kadavath, S., Kundu, S., Askell, A., Kernion, J., Jones, A., ... & Kaplan, J. (2022). *Constitutional AI: Harmlessness from AI feedback*. arXiv preprint arXiv:2212.08073. [Preprint en arXiv](https://arxiv.org/abs/2212.08073)
+* **API de Mistral AI**: Mistral AI Team. (2024). *Mistral Large and Small Models: High-Performance Open Models for Instruction Following and Alignment*. Mistral AI. [Sitio Oficial](https://mistral.ai)
+
+### 2. Recolección y Clasificación de Datos (Datasets & NLP)
+* **Dataset ShareChat**: Nguyen, T. (2024). *ShareChat: A Large-Scale Dataset of Multi-Turn Conversations with LLMs*. Hugging Face. [Dataset en Hugging Face](https://huggingface.co/datasets/tucnguyen/ShareChat)
+* **Clasificador Multilingüe de Toxicidad (Detoxify)**: Hanu, L., & Unitary team. (2020). *Detoxify: Toxic comment classification*. GitHub. [Repositorio en GitHub](https://github.com/unitaryai/detoxify)
+
+### 3. Modelado Predictivo e Inferencia Estadística
+* **Scikit-Learn (GNB & KNN)**: Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., ... & Duchesnay, E. (2011). *Scikit-learn: Machine learning in Python*. Journal of Machine Learning Research, 12(Oct), 2825-2830. [Artículo Científico](https://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)
+* **Prueba de Chi-cuadrada de Pearson ($\chi^2$)**: Pearson, K. (1900). *On the criterion that a given system of deviations from the probable in the case of a correlated system of variables is such that it can be reasonably supposed to have arisen from a random sampling*. The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science, 50(302), 157-175. [Publicación Histórica](https://doi.org/10.1080/14786440009463897)
+
+### 4. Complejidad Computacional y Big-O
+* **Notación Asintótica Asignada**: Knuth, D. E. (1976). *Big Omicron and big Omega and big Theta*. ACM SIGACT News, 8(2), 18-24. [Publicación ACM](https://dl.acm.org/doi/10.1145/1008335.1008338)
+
+### 5. Librerías y Ecosistema de Programación (Core Stack)
+* **TensorFlow & Keras (Clasificador Neuronal POO)**: Abadi, M., et al. (2015). *TensorFlow: Large-scale machine learning on heterogeneous systems*. [Sitio Oficial](https://www.tensorflow.org/)
+* **Pandas**: McKinney, W. (2010). *Data structures for statistical computing in Python*. Proceedings of the 9th Python in Science Conference, 51-56.
+* **NumPy**: Harris, C. R., et al. (2020). *Array programming with NumPy*. Nature, 585(7825), 357-362. [Artículo en Nature](https://doi.org/10.1038/s41586-020-2649-2)
+
+---
+
 *Para dudas, comentarios o contribuciones sobre esta investigación, por favor abre un Issue en este repositorio o consulta la información contenida en el [Reporte de Estudio](file:///c:/Users/t14/Desktop/Proyecto_Integrador/proyecto_integrador/Reporte_Estudio_Proyecto_Integrador.pdf) y en el [Póster Científico](file:///c:/Users/t14/Desktop/Proyecto_Integrador/proyecto_integrador/Poster_FINAL.pdf) incluidos.*
