@@ -16,11 +16,9 @@
 \markboth{Complejidad Computacional, Mayo de 2026}{Estudio de Complejidad Computacional}
 
 \begin{document}
-
 \maketitle
-
 \begin{abstract}
-Este reporte presenta un análisis exhaustivo y riguroso de la complejidad computacional asintótica (Big-O) y el comportamiento empírico de dos clasificadores fundamentales, $K$-Nearest Neighbors (KNN) con similitud coseno y Regresión Logística con descenso de gradiente por lotes, aplicados al problema de auditoría del sesgo de alineación en Modelos de Lenguaje Grande (LLMs). Utilizando el dataset equilibrado extraído de ShareChat, se implementaron ambos algoritmos ``desde cero'' bajo un enfoque estrictamente manual, comparando su rendimiento temporal y de memoria frente a las soluciones altamente optimizadas de la biblioteca scikit-learn. Los resultados demuestran que las optimizaciones espaciales (como KD-Trees) y solvers de segundo orden (como L-BFGS) reducen drásticamente los tiempos empíricos de ejecución, validando las cotas asintóticas teóricas propuestas y demostrando las limitaciones del modelado manual bajo volúmenes de datos masivos.
+Este reporte presenta un analisis de la complejidad asintótica (Big O) y el comportamiento de dos modelos de clasificacion de Aprendizaje Supervisado (Machine learning); K-Nearest Neighbors (KNN) con similitud coseno y Regresión Logistica con descendso de gradiente, aplicados al problema de auditoria de sesgo de alineacion (aligment) en LLMs. Utilizando el dataset extraido de ShareChat, se implemantaron ambos algoritmos de ML “desde cero”, con una implementacion manual, comparando su rendimiento en contra de soluciones optimizadas de la biblioteca scikit-learn. Los resultados demuestran las limitaciones del modelado manual bajo grandes volumenes de datos.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -28,35 +26,36 @@ Complejidad Algorítmica, Cota Asintótica, Big-O, K-Nearest Neighbors, Regresi�
 \end{IEEEkeywords}
 
 \section{Introducción}
-\IEEEPARstart{E}{l} advenimiento de los Modelos de Lenguaje Grande (LLMs) ha revolucionado el procesamiento del lenguaje natural. No obstante, garantizar que estas herramientas respondan bajo parámetros seguros y alineados (\textit{AI Safety}) es una prioridad crítica. El estudio de la hipótesis del \textit{Sesgo de Alineación} evalúa si los modelos comerciales y de código abierto rechazan adecuadamente el contenido hostil en diferentes lenguas y plataformas, empleando clasificadores de aprendizaje supervisado de base matemática formal \cite{hastie2009}.
 
-Para predecir el comportamiento de seguridad basándose en atributos de entrada (longitud de prompts, plataforma e idioma), se hace indispensable el uso de modelos clasificadores como KNN y Regresión Logística. En este contexto, no solo importa la precisión del clasificador, sino también su eficiencia computacional. 
+\IEEEPARstart{L}{a} llegada de los Modelos Grandes de Lenguaje (LLMs) revolucionó el procesamiento de lenguaje natural (NLP). Sin embargo, olas de investigación enfocadas en garantizar que estas herramientas respondan bajo estándares seguros y alineados (\textit{AI Safety}) han puesto a la teoría de la alineación como prioridad crítica dentro de la investigación por la seguridad de la IA. El estudio de la hipótesis del \textit{Sesgo de Alineación} evalúa si los modelos comerciales y de código abierto rechazan adecuadamente el contenido hostil en diferentes lenguas y plataformas \cite{ouyang2022}.
 
-El presente reporte tiene como finalidad formalizar matemáticamente los dos algoritmos implementados de manera manual en el proyecto, derivar con rigor científico sus complejidades asintóticas teóricas utilizando la notación formal Big-O \cite{knuth1976}, y analizar experimentalmente sus curvas de escalamiento temporal ($T(N)$) frente a implementaciones optimizadas de código abierto.
+Para predecir el comportamiento de seguridad ante prompts tóxicos basándonos en atributos de entrada (longitud de prompts, plataforma e idioma) se hace indispensable la implementación de modelos de clasificación como KNN y Regresión Logística. En este contexto, no solo importa la precisión del clasificador, sino también su eficiencia computacional. 
+
+El presente reporte tiene como finalidad formalizar matemáticamente los dos algoritmos implementados de manera manual en el proyecto, presentar de forma científica las complejidades asintóticas utilizando la notación formal Big-O \cite{knuth1976}, y comparar sus curvas de escalamiento en tiempo ($T(N)$) contra las implementaciones optimizadas de la librería sklearn.
 
 \section{Metodología Matemática de los Algoritmos}
 
-Para el desarrollo del pipeline del proyecto, se implementaron de forma manual dos arquitecturas clásicas de aprendizaje supervisado, operando sobre representaciones vectoriales dispersas del texto obtenidas mediante vectorización TF-IDF en un espacio de características de dimensión $d$.
+Para la elaboración del proceso del proyecto, implementamos de forma manual dos modelos estándar de aprendizaje supervisado. Estos modelos trabajan con el texto transformado en 'vectores dispersos' mediante el método TF-IDF, dentro de un espacio de características de dimensión $d$.
 
 \subsection{K-Nearest Neighbors (KNN) con Similitud Coseno}
-El clasificador KNN es un método no paramétrico de aprendizaje perezoso (\textit{lazy learning}) \cite{hastie2009}. En lugar de modelar una fase de entrenamiento explícita, almacena el conjunto de entrenamiento de muestras $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
+El clasificador KNN es un método sencillo y no paramétrico de aprendizaje basado en instancias o perezoso (\textit{lazy learning}) \cite{hastie2009}. Este modelo no tiene una fase de entrenamiento formal; en su lugar, simplemente almacena los datos de entrenamiento $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
 
-Dado un punto de consulta $\mathbf{q} \in \mathbb{R}^d$, el algoritmo calcula la similitud de $\mathbf{q}$ con cada muestra de entrenamiento $\mathbf{x}_i$ ($i = 1, \dots, N$) utilizando la \textit{Similitud Coseno}, definida como:
+Para clasificar un nuevo dato o prompt de consulta $\mathbf{q} \in \mathbb{R}^d$, el algoritmo calcula qué tan parecido es $\mathbf{q}$ con cada ejemplo $\mathbf{x}_i$ ($i = 1, \dots, N$) usando la \textit{Similitud Coseno}, la cual se define matemáticamente como:
 \begin{equation}
 \text{sim}(\mathbf{q}, \mathbf{x}_i) = \frac{\mathbf{q} \cdot \mathbf{x}_i}{\|\mathbf{q}\|_2 \|\mathbf{x}_i\|_2} = \frac{\sum_{j=1}^d q_j x_{i,j}}{\sqrt{\sum_{j=1}^d q_j^2} \sqrt{\sum_{j=1}^d x_{i,j}^2}}
 \end{equation}
 
-Posteriormente, se define la \textit{Distancia Coseno} como:
+A partir de esto, calculamos la \textit{Distancia Coseno} para medir la separación:
 \begin{equation}
 d_{\text{cos}}(\mathbf{q}, \mathbf{x}_i) = 1 - \text{sim}(\mathbf{q}, \mathbf{x}_i)
 \end{equation}
 
-El algoritmo identifica el conjunto $\mathcal{N}_K(\mathbf{q})$ que contiene las $K$ muestras de entrenamiento con menor distancia $d_{\text{cos}}$ hacia $\mathbf{q}$. La predicción de la clase de $\mathbf{q}$, denotada por $\hat{y}$, se define mediante votación mayoritaria simple:
+Luego, buscamos el conjunto $\mathcal{N}_K(\mathbf{q})$ con las $K$ muestras de entrenamiento que tengan la menor distancia $d_{\text{cos}}$ con respecto a $\mathbf{q}$. Finalmente, predecimos la clase $\hat{y}$ tomando la etiqueta más común (votación mayoritaria):
 \begin{equation}
 \hat{y} = \text{mode} \left( \{ y_i \mid \mathbf{x}_i \in \mathcal{N}_K(\mathbf{q}) \} \right)
 \end{equation}
 
-La lógica detallada de este proceso e implementación manual se presenta en el Algoritmo 1.
+El pseudocódigo completo de nuestra implementación manual de este algoritmo se describe en la Tabla I.
 
 \begin{table}[h]
 \centering
@@ -83,30 +82,30 @@ La lógica detallada de este proceso e implementación manual se presenta en el 
 \end{table}
 
 \subsubsection{Cálculo Detallado en Librerías Utilizadas (KNN)}
-Para la ejecución de la similitud coseno manual en Python, se emplean las funciones de la biblioteca \texttt{numpy}:
+Para programar la similitud coseno de forma manual en Python, usamos la biblioteca \texttt{numpy} con las siguientes funciones:
 \begin{itemize}
-    \item \textbf{np.dot(sample, X.T)}: Realiza el producto punto matricial $\mathbf{q} \mathbf{X}^T$. A nivel de bajo nivel (BLAS), calcula para cada muestra $i$ el valor sumatorio $\sum_{j=1}^d q_j X_{i,j}$.
-    \item \textbf{np.linalg.norm(X, axis=1)}: Calcula la norma euclidiana o de Frobenius $\|\mathbf{x}_i\|_2 = \sqrt{\sum_{j=1}^d X_{i,j}^2}$ para cada vector $i$.
+    \item \textbf{np.dot(sample, X.T)}: Realiza el producto punto matricial entre el vector de prueba y los de entrenamiento. En segundo plano (usando librerías BLAS optimizadas), calcula la suma $\sum_{j=1}^d q_j X_{i,j}$ para cada elemento $i$.
+    \item \textbf{np.linalg.norm(X, axis=1)}: Obtiene la norma de cada vector $\|\mathbf{x}_i\|_2 = \sqrt{\sum_{j=1}^d X_{i,j}^2}$ para poder normalizar las distancias.
 \end{itemize}
-En contraste, la librería optimizada \texttt{scikit-learn} utiliza estructuras espaciales avanzadas:
+Por otro lado, la versión optimizada de \texttt{scikit-learn} tiene implementaciones más eficientes para buscar vecinos rápidamente:
 \begin{itemize}
-    \item \textbf{KD-Tree (Búsqueda Espacial)}: Divide de forma recursiva el espacio vectorial de entrenamiento de $N \times d$ en celdas mediante hiperplanos ortogonales a los ejes de coordenadas. Al realizar una consulta, la función calcula la distancia euclidiana al hiperplano divisor del nodo actual y poda recursivamente subárboles completos si la distancia ortogonal mínima a la frontera de la celda es mayor que la distancia al $K$-ésimo vecino más cercano encontrado hasta el momento, optimizando el cálculo de distancias de $\mathcal{O}(N)$ a $\mathcal{O}(\log N)$.
+    \item \textbf{KD-Tree}: Es una estructura de árbol que divide el espacio de datos de tamaño $N \times d$ usando hiperplanos. Cuando se busca un vecino, el algoritmo calcula la distancia a las fronteras del árbol y evita calcular la distancia con datos que están muy lejos (poda del árbol). Esto permite reducir el costo de buscar vecinos de un orden lineal $\mathcal{O}(N)$ a uno logarítmico $\mathcal{O}(\log N)$ en casos ideales.
 \end{itemize}
 
 \subsection{Regresión Logística con Descenso de Gradiente}
-La Regresión Logística es un modelo paramétrico formal \cite{hastie2009} donde la probabilidad de que una muestra $\mathbf{x} \in \mathbb{R}^d$ pertenezca a la clase positiva ($y = 1$) se modela mediante la función sigmoide $\sigma(z)$:
+La Regresión Logística es un modelo de clasificación muy utilizado \cite{hastie2009}. En este algoritmo, la probabilidad de que un texto o prompt $\mathbf{x} \in \mathbb{R}^d$ sea clasificado en la categoría de interés ($y = 1$) se calcula con la función sigmoide:
 \begin{equation}
 h_{\mathbf{w}, b}(\mathbf{x}) = \sigma(\mathbf{w}^T \mathbf{x} + b) = \frac{1}{1 + e^{-(\mathbf{w}^T \mathbf{x} + b)}}
 \end{equation}
-donde $\mathbf{w} \in \mathbb{R}^d$ representa el vector de pesos y $b \in \mathbb{R}$ el sesgo (bias).
+donde $\mathbf{w} \in \mathbb{R}^d$ son los pesos del modelo y $b \in \mathbb{R}$ es el sesgo o término independiente.
 
-Para el entrenamiento de la Regresión Logística, se optimizan los parámetros minimizando la función de costo de Entropía Cruzada Binaria (\textit{Binary Cross-Entropy Loss}). Mientras que la implementación manual prescinde de penalizaciones ($\lambda = 0$), el modelado formal e industrial incorpora regularización $L_2$ para mitigar el sobreajuste:
+Para entrenar este modelo, buscamos los mejores valores de $\mathbf{w}$ y $b$ minimizando la función de costo conocida como Entropía Cruzada Binaria. En nuestra implementación manual no usamos penalización ($\lambda = 0$), pero en las librerías profesionales se suele agregar un término de regularización $L_2$ para evitar que el modelo se sobreajuste a los datos:
 \begin{equation}
 J(\mathbf{w}, b) = -\frac{1}{N} \sum_{i=1}^N \left[ y^{(i)} \ln(h^{(i)}) + (1-y^{(i)}) \ln(1-h^{(i)}) \right] + \frac{\lambda}{2N} \|\mathbf{w}\|_2^2
 \end{equation}
-donde $h^{(i)} = h_{\mathbf{w}, b}(\mathbf{x}^{(i)})$ y $\lambda$ es el parámetro de regularización.
+donde $h^{(i)} = h_{\mathbf{w}, b}(\mathbf{x}^{(i)})$ y $\lambda$ es el parámetro que controla la fuerza de la regularización.
 
-La optimización se realiza mediante Descenso de Gradiente por lotes (Batch Gradient Descent). Las derivadas parciales de la función de pérdida respecto a los parámetros son:
+Para encontrar el mínimo de esta función, implementamos el algoritmo de Descenso de Gradiente. Las derivadas de la función de costo con respecto a los parámetros (gradientes) se calculan como:
 \begin{equation}
 \frac{\partial J}{\partial \mathbf{w}} = \frac{1}{N} \mathbf{X}^T (\mathbf{h} - \mathbf{y}) + \frac{\lambda}{N} \mathbf{w}
 \end{equation}
@@ -114,7 +113,7 @@ La optimización se realiza mediante Descenso de Gradiente por lotes (Batch Grad
 \frac{\partial J}{\partial b} = \frac{1}{N} \sum_{i=1}^N (h^{(i)} - y^{(i)})
 \end{equation}
 
-En cada iteración $t$, los parámetros se actualizan utilizando la tasa de aprendizaje $\alpha$:
+En cada iteración de entrenamiento $t$, actualizamos los pesos y el sesgo usando una tasa de aprendizaje $\alpha$:
 \begin{equation}
 \mathbf{w}^{(t+1)} \leftarrow \mathbf{w}^{(t)} - \alpha \frac{\partial J}{\partial \mathbf{w}}
 \end{equation}
@@ -122,7 +121,7 @@ En cada iteración $t$, los parámetros se actualizan utilizando la tasa de apre
 b^{(t+1)} \leftarrow b^{(t)} - \alpha \frac{\partial J}{\partial b}
 \end{equation}
 
-La lógica detallada de este proceso de optimización iterativo se presenta en el Algoritmo 2.
+El flujo paso a paso de este entrenamiento manual se detalla en el pseudocódigo de la Tabla II.
 
 \begin{table}[h]
 \centering
@@ -152,14 +151,14 @@ La lógica detallada de este proceso de optimización iterativo se presenta en e
 \end{table}
 
 \subsubsection{Cálculo Detallado en Librerías Utilizadas (Regresión Logística)}
-Para la Regresión Logística construida a mano, se emplean llamadas elementales de \texttt{numpy}:
+Para la regresión logística hecha a mano, usamos las siguientes herramientas de la librería \texttt{numpy}:
 \begin{itemize}
-    \item \textbf{np.exp(-z)}: Calcula la función exponencial $e^{-z_i}$ para cada entrada. En la arquitectura del procesador, esto se evalúa mediante series de Taylor truncadas y aproximaciones racionales de Chebyshev optimizadas a nivel de hardware.
-    \item \textbf{np.clip(z, -250, 250)}: Trunca los valores de la combinación lineal $\mathbf{z}$ al intervalo $[-250, 250]$. Este cálculo numérico estricto evita desbordamientos de tipo punto flotante (\textit{overflow/underflow}), ya que $e^{250}$ es manejable por el tipo de dato \texttt{double} de Python, mientras que valores mayores a 709 provocarían divisiones por cero o resultados indefinidos (\texttt{NaN}).
+    \item \textbf{np.exp(-z)}: Calcula el valor de $e^{-z_i}$ para cada dato. Internamente, el procesador evalúa esto usando aproximaciones matemáticas muy eficientes a nivel de hardware.
+    \item \textbf{np.clip(z, -250, 250)}: Esta función limita los valores de $\mathbf{z}$ para que estén dentro del rango $[-250, 250]$. Hacemos esto para evitar errores de desbordamiento numérico (\textit{overflow/underflow}), ya que si calculamos el exponencial de números muy grandes, Python puede producir valores infinitos o indeterminados (\texttt{NaN}).
 \end{itemize}
-Por su parte, \texttt{scikit-learn} utiliza un método de optimización no lineal sofisticado:
+En comparación, la librería \texttt{scikit-learn} utiliza un optimizador más avanzado:
 \begin{itemize}
-    \item \textbf{L-BFGS (Algoritmo de Optimización Cuasi-Newton)}: Resuelve el problema de minimización de costo $J(\mathbf{w}, b)$ estimando iterativamente la dirección de descenso mediante la aproximación de la inversa de la matriz Hessiana $\mathbf{H}_k \approx (\nabla^2 J)^{-1}$ sin necesidad de construirla ni almacenarla en memoria. En cada iteración $k$, el solver realiza una recursión de doble bucle (\textit{Two-loop recursion}) sobre el historial de los últimos $m$ cambios de posición $\mathbf{s}_k = \mathbf{w}_{k+1} - \mathbf{w}_k$ y cambios en gradientes $\mathbf{y}_k = \mathbf{g}_{k+1} - \mathbf{g}_k$. Con esto calcula de forma precisa la dirección de actualización de parámetros $\mathbf{r}_k = -\mathbf{H}_k \mathbf{g}_k$ en una fracción de tiempo extremadamente rápida en comparación con el descenso de gradiente de primer orden.
+    \item \textbf{L-BFGS}: Es un método numérico de optimización de segundo orden que pertenece a la familia cuasi-Newton. En lugar de usar solo la dirección del gradiente, este optimizador estima la curvatura de la función usando información de las segundas derivadas (aproximación de la matriz Hessiana). Lo hace guardando únicamente un historial de los últimos $m$ cambios de pesos y gradientes en memoria (donde $m$ suele ser pequeño, como $10$), evitando guardar matrices gigantescas. Esto permite que el modelo encuentre el punto óptimo muchísimo más rápido que el descenso de gradiente estándar.
 \end{itemize}
 
 \section{Análisis de Complejidad Computacional Asintótica (Big-O)}
@@ -179,29 +178,29 @@ Por su parte, \texttt{scikit-learn} utiliza un método de optimización no linea
 \textbf{Reg. Logística Scikit (L-BFGS)} & $\mathcal{O}(T' \cdot m \cdot d)$ (donde $T' \ll T$, $m \approx 10$) & $\mathcal{O}(M \cdot d)$ & $\mathcal{O}(m \cdot d)$ \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table>
 
-A continuación, se deducen matemáticamente las complejidades asintóticas teóricas de las implementaciones manuales e industriales \cite{pedregosa2011} de ambos algoritmos. Las variables utilizadas corresponden a: $N$ (número de muestras de entrenamiento), $M$ (número de muestras a predecir), $d$ (número de características vectoriales, en este caso $d = 1000$ por la vectorización TF-IDF), $K$ (número de vecinos en KNN), y $T$ (número de iteraciones en el descenso de gradiente).
+En esta sección, calculamos las complejidades asintóticas teóricas (Big-O) de las implementaciones manuales y las comparamos con las de \texttt{scikit-learn} \cite{pedregosa2011}. Para este análisis, definimos las siguientes variables: $N$ es la cantidad de ejemplos en el conjunto de entrenamiento, $M$ es el número de ejemplos nuevos que queremos predecir, $d$ es la dimensión de los vectores de características (donde $d = 1000$ debido a los términos obtenidos en TF-IDF), $K$ representa el número de vecinos elegidos para KNN, y $T$ es el total de iteraciones en el descenso de gradiente.
 
 \subsection{Complejidad Teórica de KNN}
 
 \subsubsection{Fase de Entrenamiento}
-La implementación manual de KNN no realiza ningún cómputo previo en entrenamiento, únicamente almacena en memoria la matriz de características y etiquetas. Por ende, la complejidad temporal es:
+Como el algoritmo KNN manual es un método basado en instancias, no realiza ningún cálculo durante la fase de entrenamiento; simplemente guarda en la memoria la matriz de características y las etiquetas correspondientes. Por lo tanto, el tiempo de entrenamiento es constante:
 \begin{equation}
 T_{\text{train}}^{\text{manual}}(N, d) = \mathcal{O}(1)
 \end{equation}
-La complejidad espacial (memoria) requerida para almacenar los datos es de cota lineal respecto a las dimensiones de la entrada:
+Por su parte, el espacio en memoria (complejidad espacial) necesario para guardar estos datos depende directamente del tamaño de la entrada:
 \begin{equation}
 S_{\text{train}}^{\text{manual}}(N, d) = \mathcal{O}(N \cdot d)
 \end{equation}
 
 \subsubsection{Fase de Predicción}
-Para clasificar $M$ nuevos puntos de consulta dispersos $\mathbf{q}$, el algoritmo realiza los siguientes pasos por cada muestra:
+Para clasificar un conjunto de $M$ nuevos ejemplos $\mathbf{q}$, el algoritmo debe realizar dos pasos principales por cada uno de ellos:
 \begin{enumerate}
-\item \textbf{Cálculo de Distancias Coseno}: Para un vector de consulta $\mathbf{q} \in \mathbb{R}^d$, calcular la distancia coseno con respecto a una muestra $\mathbf{x}_i \in \mathbb{R}^d$ requiere un producto punto de tamaño $d$ y el cálculo de sus normas, lo que toma cota temporal $\mathcal{O}(d)$ operaciones elementales. Al evaluar contra las $N$ muestras de entrenamiento, la complejidad acumulada es $\mathcal{O}(N \cdot d)$.
-\item \textbf{Búsqueda de los $K$-Vecinos}: Ordenar las $N$ distancias para extraer los elementos menores toma $\mathcal{O}(N \log N)$ operaciones. Si se optimiza mediante una estructura de datos tipo montículo (Min-Heap / Max-Heap) de tamaño $K$, la cota asintótica de selección se reduce a $\mathcal{O}(N \log K)$.
+\item \textbf{Cálculo de Distancia Coseno}: Medir la distancia entre un vector de consulta $\mathbf{q} \in \mathbb{R}^d$ y un ejemplo de entrenamiento $\mathbf{x}_i \in \mathbb{R}^d$ requiere hacer un producto punto y calcular sus normas. Esto toma un tiempo proporcional a la dimensión de los datos, es decir, $\mathcal{O}(d)$ operaciones básicas. Al repetir esto para los $N$ ejemplos de entrenamiento, el costo total por cada consulta es de $\mathcal{O}(N \cdot d)$.
+\item \textbf{Búsqueda de los $K$ vecinos más cercanos}: Si ordenamos por completo las $N$ distancias calculadas, tardaríamos un tiempo de $\mathcal{O}(N \log N)$. Sin embargo, si utilizamos una estructura de datos optimizada como un montículo (heap) de tamaño $K$ para guardar los elementos más cercanos, este paso se reduce a un costo de $\mathcal{O}(N \log K)$.
 \end{enumerate}
-Por lo tanto, la complejidad de predecir $M$ muestras de forma manual es:
+Multiplicando este proceso por los $M$ puntos que queremos clasificar, la complejidad de predicción de la versión manual es:
 \begin{equation}
 T_{\text{predict}}^{\text{manual}}(N, M, d, K) = \mathcal{O}(M \cdot (N \cdot d + N \log K))
 \end{equation}
@@ -209,30 +208,30 @@ T_{\text{predict}}^{\text{manual}}(N, M, d, K) = \mathcal{O}(M \cdot (N \cdot d 
 \subsection{Complejidad Teórica de Regresión Logística}
 
 \subsubsection{Fase de Entrenamiento (GD Manual)}
-El entrenamiento manual utiliza Batch Gradient Descent. En cada iteración $t \in [1, T]$:
+Nuestra implementación manual de la regresión logística utiliza el Descenso de Gradiente por lotes. En cada iteración $t$ de un total de $T$, el algoritmo realiza los siguientes pasos:
 \begin{enumerate}
-\item \textbf{Cálculo de Predicción $\mathbf{h}$}: Se realiza el producto matricial $\mathbf{X} \mathbf{w} + b$. Multiplicar una matriz de tamaño $N \times d$ por un vector $d \times 1$ toma $\mathcal{O}(N \cdot d)$ operaciones. La aplicación de la función sigmoide requiere $\mathcal{O}(N)$ operaciones de punto flotante.
-\item \textbf{Cálculo de Gradientes}: Computar $\mathbf{X}^T (\mathbf{h} - \mathbf{y})$ involucra multiplicar una matriz de $d \times N$ por un vector de $N \times 1$, con costo asintótico $\mathcal{O}(N \cdot d)$.
-\item \textbf{Actualización de Parámetros}: Actualizar el vector de pesos $\mathbf{w}$ toma $\mathcal{O}(d)$ operaciones elementales.
+\item \textbf{Cálculo de la predicción $\mathbf{h}$}: Se evalúa el producto matricial $\mathbf{X} \mathbf{w} + b$. Multiplicar la matriz de datos de tamaño $N \times d$ por el vector de pesos de tamaño $d \times 1$ tiene un costo de $\mathcal{O}(N \cdot d)$ operaciones, y aplicar la función sigmoide toma un tiempo de $\mathcal{O}(N)$.
+\item \textbf{Cálculo del Gradiente}: La operación $\mathbf{X}^T (\mathbf{h} - \mathbf{y})$ implica multiplicar una matriz transpuesta de tamaño $d \times N$ por un vector de diferencias de tamaño $N \times 1$, lo que toma un costo de $\mathcal{O}(N \cdot d)$.
+\item \textbf{Actualización de pesos y sesgo}: Modificar los parámetros $\mathbf{w}$ y $b$ requiere $\mathcal{O}(d)$ operaciones simples.
 \end{enumerate}
-El costo computacional por iteración es $\mathcal{O}(N \cdot d)$. Al realizar $T$ iteraciones de actualización, la complejidad asintótica total del entrenamiento manual es:
+Sumando estos pasos, cada iteración de entrenamiento toma un tiempo de $\mathcal{O}(N \cdot d)$. Al repetir esto durante las $T$ iteraciones indicadas, la complejidad temporal total de nuestro entrenamiento manual es:
 \begin{equation}
 T_{\text{train}}^{\text{manual}}(N, d, T) = \mathcal{O}(T \cdot N \cdot d)
 \end{equation}
-La memoria adicional requerida para almacenar los parámetros $\mathbf{w}$ y $b$ es independiente del tamaño de entrenamiento $N$, siendo:
+En cuanto al espacio en memoria, solo necesitamos almacenar los parámetros del modelo (pesos y sesgo), lo cual es independiente del número de ejemplos $N$:
 \begin{equation}
 S_{\text{train}}^{\text{manual}}(d) = \mathcal{O}(d)
 \end{equation}
 
 \subsubsection{Fase de Predicción}
-Para predecir $M$ muestras, el algoritmo calcula $h^{(i)} = \sigma(\mathbf{w}^T \mathbf{x}^{(i)} + b)$ para cada una. Multiplicar $\mathbf{w}^T \mathbf{x}$ toma $\mathcal{O}(d)$. De este modo, la complejidad temporal de predicción es:
+Para predecir la clase de un conjunto de $M$ nuevos ejemplos, el modelo solo calcula la sigmoide de la combinación lineal $h = \sigma(\mathbf{w}^T \mathbf{x} + b) para cada uno de ellos. Multiplicar el vector de pesos por las características de un ejemplo toma un tiempo de $\mathcal{O}(d)$. Por lo tanto, la complejidad de predicción es:
 \begin{equation}
 T_{\text{predict}}^{\text{manual}}(M, d) = \mathcal{O}(M \cdot d)
 \end{equation}
 
 \section{Resultados Empíricos y Comparativa con Librerías}
 
-Las pruebas experimentales se llevaron a cabo utilizando la base de datos balanceada y etiquetada del proyecto integrador, la cual fue extraída y curada de ShareChat \cite{tucnguyen2024}, constando de $N_{\text{total}} = 430$ muestras de texto vectorizadas con TF-IDF a $d = 1000$ columnas. En la Figura \ref{fig:pca_plot} se ilustra la distribución bidimensional de las características proyectadas mediante Análisis de Componentes Principales (PCA), evidenciando el solapamiento y solidez de los patrones de alineación de prompts.
+Para comprobar el rendimiento real de los algoritmos, realizamos experimentos utilizando la base de datos de ShareChat \cite{tucnguyen2024} adaptada para el proyecto. Esta base cuenta con $N_{\text{total}} = 430$ muestras de texto, representadas en vectores TF-IDF de tamaño $d = 1000$. En la Figura \ref{fig:pca_plot} se muestra una visualización en dos dimensiones del conjunto de datos mediante un Análisis de Componentes Principales (PCA), lo que nos ayuda a entender cómo se distribuyen y traslapan las clases asociadas al sesgo de alineación en los prompts.
 
 \begin{figure}[htbp]
 \centering
@@ -241,10 +240,10 @@ Las pruebas experimentales se llevaron a cabo utilizando la base de datos balanc
 \label{fig:pca_plot}
 \end{figure}
 
-Se midieron los tiempos de ejecución de las fases de entrenamiento y predicción mediante la técnica de submuestreo incremental para obtener curvas de escalamiento empíricas.
+Para analizar el comportamiento de los modelos frente a diferentes cantidades de datos, medimos los tiempos de ejecución tomando subconjuntos cada vez más grandes del dataset de entrenamiento.
 
 \subsection{Análisis del Comportamiento de KNN}
-Como se visualiza en la gráfica empírica de la Figura \ref{fig:complexity_knn}, el tiempo de predicción manual exhibe un crecimiento estrictamente lineal respecto al tamaño del conjunto de entrenamiento $N$, coincidiendo de forma exacta con la complejidad de cota teórica deducida $\mathcal{O}(M \cdot N \cdot d)$. Al ser $d = 1000$ y $N$ creciente, el costo computacional de realizar productos punto de alta dimensionalidad de forma repetida en Python interpretado se vuelve un cuello de botella severo.
+Como podemos ver en la Figura \ref{fig:complexity_knn}, el tiempo de predicción de nuestra implementación manual de KNN crece de manera totalmente lineal a medida que aumentamos el tamaño de los datos de entrenamiento $N$. Esto coincide con nuestra estimación teórica de $\mathcal{O}(M \cdot N \cdot d)$. Debido a que programamos el código directamente en Python interpretado y trabajamos con vectores grandes ($d=1000$), calcular repetidamente similitudes coseno de forma manual se vuelve extremadamente lento y costoso para la computadora.
 
 \begin{figure}[htbp]
 \centering
@@ -253,12 +252,14 @@ Como se visualiza en la gráfica empírica de la Figura \ref{fig:complexity_knn}
 \label{fig:complexity_knn}
 \end{figure}
 
-Por el contrario, la biblioteca scikit-learn (\texttt{KNeighborsClassifier}) implementa optimizaciones a bajo nivel a través de llamadas altamente eficientes en C y álgebra lineal vectorial estructurada (operaciones BLAS de nivel 3). Asimismo, ofrece la alternativa de construir estructuras de indexación espacial como \textbf{KD-Tree} o \textbf{Ball-Tree}:
-* \textbf{KD-Tree}: Divide el espacio métrico de entrenamiento de forma recursiva en hiperplanos ortogonales. La construcción del árbol toma un costo inicial de $\mathcal{O}(N \cdot d \log N)$ en entrenamiento. Sin embargo, en predicción reduce la búsqueda de vecinos a $\mathcal{O}(d \log N)$ operaciones en promedio.
-* \textbf{Curse of Dimensionality (Maldición de la Dimensionalidad)}: A pesar de la ventaja teórica de los KD-Trees, la literatura científica \cite{knuth1976} y los resultados experimentales demuestran que para dimensiones elevadas ($d \ge 20$ y en este caso $d = 1000$), el volumen del espacio crece de forma exponencial, provocando que la búsqueda de vecinos tenga que explorar casi todas las ramas del árbol. Esto degrada la complejidad de KD-Tree de vuelta a la cota de fuerza bruta ($\mathcal{O}(N \cdot d)$). A pesar de esta degradación de complejidad asintótica, el solver de scikit-learn supera al manual por varios órdenes de magnitud debido a que realiza operaciones de punto flotante vectorizadas directamente a nivel de hardware.
+Por el contrario, el modelo de la librería \texttt{scikit-learn} (\texttt{KNeighborsClassifier}) es mucho más rápido porque realiza estos cálculos en segundo plano con librerías optimizadas en lenguajes compilados (como C) usando operaciones matriciales avanzadas. Además, \texttt{scikit-learn} puede utilizar un \textbf{KD-Tree} para acelerar las búsquedas:
+\begin{itemize}
+    \item \textbf{KD-Tree}: Esta estructura organiza los datos dividiendo el espacio. Construirlo toma un tiempo de entrenamiento de $\mathcal{O}(N \cdot d \log N)$, pero a cambio permite buscar los vecinos más cercanos en un tiempo promedio de $\mathcal{O}(d \log N)$ por cada consulta.
+    \item \textbf{Maldición de la Dimensionalidad}: Aunque los KD-Trees son muy útiles en dimensiones bajas, la teoría \cite{knuth1976} y los resultados de nuestras pruebas demuestran que cuando trabajamos con muchas dimensiones (como nuestras $d=1000$ características de texto), el espacio es tan grande que el árbol pierde eficiencia. En estos casos, el algoritmo se ve obligado a revisar casi todos los caminos, por lo que su complejidad vuelve a ser lineal, similar a la búsqueda manual. A pesar de esto, la versión de \texttt{scikit-learn} sigue siendo órdenes de magnitud más rápida gracias a su optimización interna a nivel de hardware.
+\end{itemize}
 
 \subsection{Análisis del Comportamiento de Regresión Logística}
-En el entrenamiento de Regresión Logística, el descenso de gradiente manual (GD) opera con una cota lineal estricta $\mathcal{O}(T \cdot N \cdot d)$. Para obtener una convergencia precisa del costo, el descenso requiere de un número muy elevado de iteraciones ($T \ge 2000$), elevando drásticamente la latencia del entrenamiento conforme $N$ escala.
+En el caso de la Regresión Logística manual, entrenar con descenso de gradiente ordinario tiene un costo lineal de $\mathcal{O}(T \cdot N \cdot d)$. Para que los pesos alcancen valores estables y el costo deje de disminuir, necesitamos realizar muchas iteraciones de entrenamiento ($T \ge 2000$), lo cual hace que el tiempo de ejecución aumente rápidamente a medida que agregamos más ejemplos de entrenamiento $N$ (ver Figura \ref{fig:complexity_rl}).
 
 \begin{figure}[htbp]
 \centering
@@ -267,16 +268,18 @@ En el entrenamiento de Regresión Logística, el descenso de gradiente manual (G
 \label{fig:complexity_rl}
 \end{figure}
 
-La implementación de scikit-learn (\texttt{LogisticRegression}) solventa esta limitación mediante el uso del solver \textbf{L-BFGS (Limited-memory Broyden-Fletcher-Goldfarb-Shanno)}, un método cuasi-Newton de optimización no lineal de segundo orden \cite{nocedal2006}:
-* **Curvatura e Información de Segundo Orden**: A diferencia del gradiente descendente convencional, que solo utiliza información de primer orden (la dirección de máxima pendiente), L-BFGS aproxima de forma iterativa el inverso de la matriz Hessiana (de segundas derivadas) utilizando la información de los gradientes más recientes en una memoria compacta de tamaño de historial $m$ (generalmente $m \approx 10$).
-* **Velocidad de Convergencia**: Al incorporar información de curvatura, L-BFGS converge a la solución óptima en una fracción mínima de iteraciones ($T' \ll T$). Esto reduce dramáticamente el tiempo de ejecución en la práctica, escalando bajo una cota aproximada de $\mathcal{O}(T' \cdot m \cdot d)$. Como se comprueba empíricamente en la Figura \ref{fig:complexity_rl}, el solver optimizado converge de forma casi instantánea, manteniendo el tiempo plano e independiente de $N$ para el espectro de muestras evaluado.
+Por su parte, \texttt{scikit-learn} (\texttt{LogisticRegression}) resuelve esto utilizando un optimizador muy eficiente llamado \textbf{L-BFGS} (un método de segundo orden) \cite{nocedal2006}:
+\begin{itemize}
+    \item \textbf{Uso de Curvatura de Segundo Orden}: Mientras que nuestro descenso de gradiente manual solo mira la dirección de la pendiente más inclinada (primer orden), el optimizador L-BFGS estima la curvatura de la función (segundas derivadas). Esto le permite dar pasos de ajuste mucho más precisos e inteligentes.
+    \item \textbf{Velocidad de Convergencia}: Al usar la información de curvatura, L-BFGS logra encontrar el valor óptimo en muy pocas iteraciones ($T' \ll T$), reduciendo enormemente el tiempo de entrenamiento. En la práctica, el costo de este solver es de aproximadamente $\mathcal{O}(T' \cdot m \cdot d)$, donde $m$ (historial de memoria) es un valor pequeño. En la Figura \ref{fig:complexity_rl} observamos cómo la curva de \texttt{scikit-learn} se mantiene casi plana e instantánea, mostrando una enorme ventaja sobre la versión hecha a mano.
+\end{itemize}
 
 \section{Conclusión}
-El estudio riguroso de la complejidad computacional valida la necesidad de algoritmos eficientes en problemas aplicados a la seguridad de la Inteligencia Artificial. Mientras que las implementaciones manuales brindan una comprensión pedagógica y transparente del funcionamiento matemático subyacente de KNN y la Regresión Logística, resultan inviables para el escalamiento de datos del mundo real bajo entornos de producción debido al costo lineal del cálculo manual de distancias de alta dimensionalidad y las miles de iteraciones requeridas por el descenso de gradiente de primer orden. 
+El análisis de la complejidad computacional demuestra la gran importancia de diseñar y utilizar algoritmos eficientes en problemas prácticos de seguridad en Inteligencia Artificial. Escribir los algoritmos manuales en este proyecto nos ha permitido comprender en detalle las matemáticas detrás de KNN y de la Regresión Logística. Sin embargo, para trabajar con datos del mundo real, estas versiones manuales no son viables en producción debido al alto tiempo que toma calcular distancias en altas dimensiones de forma repetida o por la gran cantidad de iteraciones que necesita el descenso de gradiente estándar.
 
-Las optimizaciones de las bibliotecas de código abierto (vectorización de bajo nivel, indexación espacial por árboles y optimización cuasi-Newton de segundo orden) representan un salto cualitativo asintótico y empírico crucial para la viabilidad computacional de pipelines predictivos en LLMs.
+Las técnicas de optimización que usan las librerías profesionales de código abierto, como la vectorización de bajo nivel, los árboles de búsqueda espacial y los optimizadores avanzados de segundo orden, son fundamentales para que los sistemas de análisis y clasificación sobre prompts de LLMs sean rápidos y utilizables en la práctica.
 
-\begin{thebibliography}{5}
+\begin{thebibliography}{6}
 
 \bibitem{hastie2009}
 Hastie, T., Tibshirani, R., \& Friedman, J. (2009). \emph{The Elements of Statistical Learning: Data Mining, Inference, and Prediction} (2nd ed.). Springer.
@@ -292,6 +295,9 @@ Nocedal, J., \& Wright, S. J. (2006). \emph{Numerical optimization} (2nd ed.). S
 
 \bibitem{knuth1976}
 Knuth, D. E. (1976). Big omicron and big omega and big theta. \emph{ACM SIGACT News}, \emph{8}(2), 18--24.
+
+\bibitem{ouyang2022}
+Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., ... \& Lowe, R. (2022). Training language models to follow instructions with human feedback. \emph{Advances in Neural Information Processing Systems}, \emph{35}, 27730--27744.
 
 \end{thebibliography}
 
