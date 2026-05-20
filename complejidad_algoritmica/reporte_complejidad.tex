@@ -39,7 +39,7 @@ El presente reporte tiene como finalidad formalizar matemáticamente los dos alg
 Para el desarrollo del pipeline del proyecto, se implementaron de forma manual dos arquitecturas clásicas de aprendizaje supervisado, operando sobre representaciones vectoriales dispersas del texto obtenidas mediante vectorización TF-IDF en un espacio de características de dimensión $d$.
 
 \subsection{K-Nearest Neighbors (KNN) con Similitud Coseno}
-El clasificador KNN es un método no paramétrico de aprendizaje perezoso (lazy learning). En lugar de modelar una fase de entrenamiento explícita, almacena el conjunto de entrenamiento de muestras $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
+El clasificador KNN es un método no paramétrico de aprendizaje perezoso (\textit{lazy learning}). En lugar de modelar una fase de entrenamiento explícita, almacena el conjunto de entrenamiento de muestras $\mathbf{X}_{\text{train}} \in \mathbb{R}^{N \times d}$. 
 
 Dado un punto de consulta $\mathbf{q} \in \mathbb{R}^d$, el algoritmo calcula la similitud de $\mathbf{q}$ con cada muestra de entrenamiento $\mathbf{x}_i$ ($i = 1, \dots, N$) utilizando la \textit{Similitud Coseno}, definida como:
 \begin{equation}
@@ -55,6 +55,43 @@ El algoritmo identifica el conjunto $\mathcal{N}_K(\mathbf{q})$ que contiene las
 \begin{equation}
 \hat{y} = \text{mode} \left( \{ y_i \mid \mathbf{x}_i \in \mathcal{N}_K(\mathbf{q}) \} \right)
 \end{equation}
+
+La lógica detallada de este proceso e implementación manual se presenta en el Algoritmo 1.
+
+\begin{table}[h]
+\centering
+\caption{Pseudocódigo del Clasificador KNN Manual}
+\label{alg:knn}
+\begin{tabular}{p{8cm}}
+\toprule
+\textbf{Algoritmo 1:} KNN con Similitud Coseno \\
+\midrule
+\textbf{Entrada:} Punto de consulta $\mathbf{q} \in \mathbb{R}^d$, matriz de entrenamiento $\mathbf{X} \in \mathbb{R}^{N \times d}$, etiquetas $\mathbf{y} \in \{0, 1\}^N$, número de vecinos $K$. \\
+\textbf{Salida:} Etiqueta predicha $\hat{y} \in \{0, 1\}$. \\
+\midrule
+1: \textbf{Procedimiento} \textsc{PredecirKNN}($\mathbf{q}, \mathbf{X}, \mathbf{y}, K$) \\
+2: \quad Inicializar vector de similitudes $\mathbf{s} \in \mathbb{R}^N$ \\
+3: \quad \textbf{Para} $i = 1$ \textbf{hasta} $N$ \textbf{hacer} \\
+4: \quad \quad $\mathbf{s}_i \leftarrow \frac{\mathbf{q} \cdot \mathbf{x}_i}{\|\mathbf{q}\|_2 \|\mathbf{x}_i\|_2 + \epsilon}$ \hfill $\triangleright$ Similitud Coseno \\
+5: \quad \textbf{Fin Para} \\
+6: \quad $\mathcal{I}_K \leftarrow \text{obtener\_indices\_top\_K}(\mathbf{s})$ \hfill $\triangleright$ Índices de las $K$ mayores similitudes \\
+7: \quad $\mathbf{y}_K \leftarrow \{ \mathbf{y}_j \mid j \in \mathcal{I}_K \}$ \hfill $\triangleright$ Etiquetas de los $K$ vecinos \\
+8: \quad $\hat{y} \leftarrow \text{moda}(\mathbf{y}_K)$ \hfill $\triangleright$ Votación mayoritaria \\
+9: \quad \textbf{Retornar} $\hat{y}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Cálculo Detallado en Librerías Utilizadas (KNN)}
+Para la ejecución de la similitud coseno manual en Python, se emplean las funciones de la biblioteca \texttt{numpy}:
+\begin{itemize}
+    \item \textbf{np.dot(sample, X.T)}: Realiza el producto punto matricial $\mathbf{q} \mathbf{X}^T$. A nivel de bajo nivel (BLAS), calcula para cada muestra $i$ el valor sumatorio $\sum_{j=1}^d q_j X_{i,j}$.
+    \item \textbf{np.linalg.norm(X, axis=1)}: Calcula la norma euclidiana o de Frobenius $\|\mathbf{x}_i\|_2 = \sqrt{\sum_{j=1}^d X_{i,j}^2}$ para cada vector $i$.
+\end{itemize}
+En contraste, la librería optimizada \texttt{scikit-learn} utiliza estructuras espaciales avanzadas:
+\begin{itemize}
+    \item \textbf{KD-Tree (Búsqueda Espacial)}: Divide de forma recursiva el espacio vectorial de entrenamiento de $N \times d$ en celdas mediante hiperplanos ortogonales a los ejes de coordenadas. Al realizar una consulta, la función calcula la distancia euclidiana al hiperplano divisor del nodo actual y poda recursivamente subárboles completos si la distancia ortogonal mínima a la frontera de la celda es mayor que la distancia al $K$-ésimo vecino más cercano encontrado hasta el momento, optimizando el cálculo de distancias de $\mathcal{O}(N)$ a $\mathcal{O}(\log N)$.
+\end{itemize}
 
 \subsection{Regresión Logística con Descenso de Gradiente}
 La Regresión Logística es un modelo paramétrico donde la probabilidad de que una muestra $\mathbf{x} \in \mathbb{R}^d$ pertenezca a la clase positiva ($y = 1$) se modela mediante la función sigmoide $\sigma(z)$:
@@ -84,6 +121,46 @@ En cada iteración $t$, los parámetros se actualizan utilizando la tasa de apre
 \begin{equation}
 b^{(t+1)} \leftarrow b^{(t)} - \alpha \frac{\partial J}{\partial b}
 \end{equation}
+
+La lógica detallada de este proceso de optimización iterativo se presenta en el Algoritmo 2.
+
+\begin{table}[h]
+\centering
+\caption{Pseudocódigo del Entrenamiento de Regresión Logística}
+\label{alg:logreg}
+\begin{tabular}{p{8cm}}
+\toprule
+\textbf{Algoritmo 2:} Regresión Logística por Descenso de Gradiente \\
+\midrule
+\textbf{Entrada:} Matriz de características $\mathbf{X} \in \mathbb{R}^{N \times d}$, etiquetas reales $\mathbf{y} \in \{0, 1\}^N$, tasa de aprendizaje $\alpha$, número de iteraciones $T$. \\
+\textbf{Salida:} Vector de pesos ajustados $\mathbf{w} \in \mathbb{R}^d$ y sesgo $b \in \mathbb{R}$. \\
+\midrule
+1: \textbf{Procedimiento} \textsc{EntrenarRegresionLogistica}($\mathbf{X}, \mathbf{y}, \alpha, T$) \\
+2: \quad Inicializar $\mathbf{w} \leftarrow \mathbf{0} \in \mathbb{R}^d$ y $b \leftarrow 0$ \\
+3: \quad \textbf{Para} $t = 1$ \textbf{hasta} $T$ \textbf{hacer} \\
+4: \quad \quad $\mathbf{z} \leftarrow \mathbf{X} \mathbf{w} + b$ \hfill $\triangleright$ Combinación lineal \\
+5: \quad \quad $\mathbf{h} \leftarrow \frac{1}{1 + e^{-\mathbf{z}}}$ \hfill $\triangleright$ Predicción probabilística (Sigmoide) \\
+6: \quad \quad $\mathbf{h} \leftarrow \text{clip}(\mathbf{h}, 10^{-15}, 1 - 10^{-15})$ \hfill $\triangleright$ Estabilidad numérica \\
+7: \quad \quad $\mathbf{g}_{\mathbf{w}} \leftarrow \frac{1}{N} \mathbf{X}^T (\mathbf{h} - \mathbf{y})$ \hfill $\triangleright$ Gradiente de los pesos ($\lambda=0$) \\
+8: \quad \quad $g_b \leftarrow \frac{1}{N} \sum_{i=1}^N (\mathbf{h}_i - \mathbf{y}_i)$ \hfill $\triangleright$ Gradiente del sesgo \\
+9: \quad \quad $\mathbf{w} \leftarrow \mathbf{w} - \alpha \, \mathbf{g}_{\mathbf{w}}$ \hfill $\triangleright$ Actualización de pesos \\
+10: \quad \quad $b \leftarrow b - \alpha \, g_b$ \hfill $\triangleright$ Actualización de sesgo \\
+11: \quad \textbf{Fin Para} \\
+12: \quad \textbf{Retornar} $\mathbf{w}, b$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Cálculo Detallado en Librerías Utilizadas (Regresión Logística)}
+Para la Regresión Logística construida a mano, se emplean llamadas elementales de \texttt{numpy}:
+\begin{itemize}
+    \item \textbf{np.exp(-z)}: Calcula la función exponencial $e^{-z_i}$ para cada entrada. En la arquitectura del procesador, esto se evalúa mediante series de Taylor truncadas y aproximaciones racionales de Chebyshev optimizadas a nivel de hardware.
+    \item \textbf{np.clip(z, -250, 250)}: Trunca los valores de la combinación lineal $\mathbf{z}$ al intervalo $[-250, 250]$. Este cálculo numérico estricto evita desbordamientos de tipo punto flotante (\textit{overflow/underflow}), ya que $e^{250}$ es manejable por el tipo de dato \texttt{double} de Python, mientras que valores mayores a 709 provocarían divisiones por cero o resultados indefinidos (\texttt{NaN}).
+\end{itemize}
+Por su parte, \texttt{scikit-learn} utiliza un método de optimización no lineal sofisticado:
+\begin{itemize}
+    \item \textbf{L-BFGS (Algoritmo de Optimización Cuasi-Newton)}: Resuelve el problema de minimización de costo $J(\mathbf{w}, b)$ estimando iterativamente la dirección de descenso mediante la aproximación de la inversa de la matriz Hessiana $\mathbf{H}_k \approx (\nabla^2 J)^{-1}$ sin necesidad de construirla ni almacenarla en memoria. En cada iteración $k$, el solver realiza una recursión de doble bucle (\textit{Two-loop recursion}) sobre el historial de los últimos $m$ cambios de posición $\mathbf{s}_k = \mathbf{w}_{k+1} - \mathbf{w}_k$ y cambios en gradientes $\mathbf{y}_k = \mathbf{g}_{k+1} - \mathbf{g}_k$. Con esto calcula de forma precisa la dirección de actualización de parámetros $\mathbf{r}_k = -\mathbf{H}_k \mathbf{g}_k$ en una fracción de tiempo extremadamente rápida en comparación con el descenso de gradiente de primer orden.
+\end{itemize}
 
 \section{Análisis de Complejidad Computacional Asintótica (Big-O)}
 
